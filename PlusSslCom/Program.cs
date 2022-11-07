@@ -37,6 +37,11 @@ namespace PlusSslCom
                     var stt = new SimpleTcpTransaction();
                     stt.Start(Mappings.First(t => t.Name == "distriproxy"));
                 }
+                if (args[0].ToLower() == "simplessl")
+                {
+                    var stt = new SimpleSslTransaction();
+                    stt.Start(Mappings.First(t => t.Name == "distrisslproxy"));
+                }
                 
 
                 if (args[0].ToLower() == "sslcom")
