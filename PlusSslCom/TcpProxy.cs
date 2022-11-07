@@ -35,9 +35,16 @@ namespace PlusSslCom
                         var serverMessage = ReadMessage(buffer, bytesRead, mapping.Encoding);
                         Console.WriteLine("Outgoing: {0}", serverMessage);
                     }
-                }
 
-                inputStream.Write(buffer, 0, bytesRead);
+                    inputStream.Write(buffer, 0, bytesRead);
+                }
+                else
+                {
+                    mapping.Source.Dispose();
+                    mapping.Target.Dispose();
+
+                    inputStream.Write(buffer, 0, 0);
+                }
             }
         }
     }

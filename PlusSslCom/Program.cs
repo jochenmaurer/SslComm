@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Renci.SshNet;
 
 namespace PlusSslCom
 {
     public class Program
     {
         public static int BufferSize = 32767;
+        public static int SmallBufferSize = 2048;
         private static string certificate = @"C:\temp\certificate.crt";
 
         public static string Encoding { get; set; } = "Windows-1252";
@@ -30,7 +32,12 @@ namespace PlusSslCom
                     TcpServer.RunServer(2025);
                 if (args[0].ToLower() == "sslserver")
                     SslTcpServer.RunServer(62067, certificate);
-
+                if (args[0].ToLower() == "simple")
+                {
+                    var stt = new SimpleTcpTransaction();
+                    stt.Start(Mappings.First(t => t.Name == "distriproxy"));
+                }
+                
 
                 if (args[0].ToLower() == "sslcom")
                 {
@@ -38,8 +45,7 @@ namespace PlusSslCom
                     {
                         Mapping = Mappings.First(t => t.Name == "distrisslproxy")
                     };
-                    var task = proxy.Run();
-                    task.Wait();
+                    proxy.Run();
                 }
                 if (args[0].ToLower() == "tcpcom")
                 {
@@ -47,8 +53,17 @@ namespace PlusSslCom
                     {
                         Mapping = Mappings.First(t => t.Name == "distriproxy")
                     };
-                    var task = proxy.Run();
-                    task.Wait();
+                    proxy.Run();
+                }
+                if (args[0].ToLower() == "sshtunnel")
+                {
+                    var connectionInfo = new ConnectionInfo("172.16.20.101", 22, "pg1.p00", new PasswordAuthenticationMethod("pg1.p00", ""));
+                    var tunnel = new SshTunnel(connectionInfo,
+                        Mappings.First(t => t.Name == "distrisslproxy"));
+                    while (true)
+                    {
+                        
+                    }
                 }
                     
 

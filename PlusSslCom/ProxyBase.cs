@@ -16,7 +16,7 @@ namespace PlusSslCom
 
         public bool IsLoggingEnabled { get; set; } = true;
 
-        public async Task Run()
+        public void Run()
         {
             Running = true;
             Console.WriteLine("Proxy is started!");
@@ -32,9 +32,10 @@ namespace PlusSslCom
                         Console.WriteLine("Listening to {0}!", Mapping.FromAddress + ":" + Mapping.FromPort);
                     }
 
-
-                    Mapping.Source = await Mapping.Listener.AcceptTcpClientAsync();
-                    await Task.Run(() => HandleRequest(Mapping));
+                    using (Mapping.Source = Mapping.Listener.AcceptTcpClient())
+                    {
+                        HandleRequest(Mapping);
+                    }
                 }
             }
             catch (Exception e)
@@ -62,11 +63,6 @@ namespace PlusSslCom
                 {
                     Console.WriteLine(ioException);
                 }
-            }
-
-            if (bytesRead == 0)
-            {
-                Console.WriteLine("0 bytes read. Error?");
             }
         }
 
