@@ -53,9 +53,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Proxy.cs" />
     <Compile Include="ProxyBase.cs" />
+    <Compile Include="SimpleSslCycle.cs" />
     <Compile Include="SimpleSslTransaction.cs" />
+    <Compile Include="SimpleTcpAsyncTransaction.cs" />
+    <Compile Include="SimpleTcpCycle.cs" />
     <Compile Include="SimpleTcpTransaction.cs" />
     <Compile Include="SshTunnel.cs" />
+    <Compile Include="SslHelpers.cs" />
     <Compile Include="SslProxy.cs" />
     <Compile Include="SslTcpClient.cs" />
     <Compile Include="SslTcpServer.cs" />

@@ -49,13 +49,13 @@ namespace PlusSslCom
                         while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                         {
                             // Translate data bytes to a UTF8 string.
-                            data = Encoding.GetEncoding(Program.Encoding).GetString(bytes, 0, i);
+                            data = Encoding.GetEncoding(Program.CurrentEncoding).GetString(bytes, 0, i);
                             Console.WriteLine("Received: {0}", data);
 
                             // Process the data sent by the client.
                             data = data.ToUpper();
 
-                            var msg = Encoding.GetEncoding(Program.Encoding).GetBytes(data);
+                            var msg = Encoding.GetEncoding(Program.CurrentEncoding).GetBytes(data);
 
                             // Send back a response.
                             stream.Write(msg, 0, msg.Length);

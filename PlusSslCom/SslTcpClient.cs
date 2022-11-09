@@ -64,7 +64,7 @@ namespace PlusSslCom
 
                 // Encode a test message into a byte array.
                 // Signal the end of the message using the "<EOF>".
-                var bytes = Encoding.GetEncoding(Program.Encoding).GetBytes(message);
+                var bytes = Encoding.GetEncoding(Program.CurrentEncoding).GetBytes(message);
                 // Send hello message to the server.
                 sslStream.Write(bytes);
                 sslStream.Flush();
@@ -91,7 +91,7 @@ namespace PlusSslCom
 
             // Use Decoder class to convert from bytes to UTF8
             // in case a character spans two buffers.
-            var decoder = Encoding.GetEncoding(Program.Encoding).GetDecoder();
+            var decoder = Encoding.GetEncoding(Program.CurrentEncoding).GetDecoder();
             var chars = new char[decoder.GetCharCount(buffer, 0, bytes)];
             decoder.GetChars(buffer, 0, bytes, chars, 0);
             messageData.Append(chars);

@@ -57,7 +57,7 @@ namespace PlusSslCom
                 Console.WriteLine("Received: {0}", messageData);
 
                 // Write a message to the client.
-                var message = Encoding.GetEncoding(Program.Encoding).GetBytes("Hello from the server.<EOF>");
+                var message = Encoding.GetEncoding(Program.CurrentEncoding).GetBytes("Hello from the server.<EOF>");
                 Console.WriteLine("Sending hello message.");
                 sslStream.Write(message);
             }
@@ -99,7 +99,7 @@ namespace PlusSslCom
 
                 // Use Decoder class to convert from bytes to UTF8
                 // in case a character spans two buffers.
-                var decoder = Encoding.GetEncoding(Program.Encoding).GetDecoder();
+                var decoder = Encoding.GetEncoding(Program.CurrentEncoding).GetDecoder();
                 var chars = new char[decoder.GetCharCount(buffer, 0, bytes)];
                 decoder.GetChars(buffer, 0, bytes, chars, 0);
                 messageData.Append(chars);

@@ -3,13 +3,28 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Timers;
 
 namespace PlusSslCom
 {
-    public class SimpleTcpTransaction
+    public class SimpleTcpCycle
     {
         public int BufferSize { get; set; } = Program.BufferSize;
         public TcpClient Remote { get; set; }
+        private Timer _timer;
+        private NetworkStream _localStream;
+        private bool _lock;
+
+        public SimpleTcpCycle()
+        {
+            _timer = new Timer(100);
+            _timer.Elapsed += TimerOnElapsed;
+        }
+
+        private void TimerOnElapsed(object sender, ElapsedEventArgs e)
+        {
+            GetDataFromRemote(Remote.GetStream(), _localStream);
+        }
 
         public void Start(Mapping mapping)
         {
@@ -31,14 +46,17 @@ namespace PlusSslCom
                     {
                         Console.WriteLine("Connected!");
 
-                        var stream = client.GetStream();
+                        _localStream = client.GetStream();
 
                         int bytesToWrite;
 
+                        if (!_timer.Enabled)
+                            _timer.Start();
+
                         //Lese Eingangsmessage
-                        while ((bytesToWrite = stream.Read(bytes, 0, bytes.Length)) != 0)
+                        while ((bytesToWrite = _localStream.Read(bytes, 0, bytes.Length)) != 0)
                         {
-                            SendMessageAndReceiveReplies(stream, bytes, bytesToWrite);
+                            SendMessageToRemote(_localStream, bytes, bytesToWrite);
                         }
 
                         client.Close();
@@ -60,32 +78,18 @@ namespace PlusSslCom
             Console.Read();
         }
 
-        public string SendMessageAndReceiveReplies(Stream localStream, byte[] buffer, int bytesToWrite)
+        public string SendMessageToRemote(Stream localStream, byte[] buffer, int bytesToWrite)
         {
             try
             {
                 //Schreiben nach remote
+                _lock = true;
                 Console.WriteLine("Received from local: {0}", bytesToWrite);
                 var remoteStream = Remote.GetStream();
-                if (remoteStream.DataAvailable)
-                {
-                    GetDataFromRemote(remoteStream, localStream);
-                }
-
                 remoteStream.Write(buffer, 0, bytesToWrite);
                 remoteStream.Flush();
                 Console.WriteLine("Sent to remote: {0}", bytesToWrite);
-
-
-                //Lesen und zurück
-                if (remoteStream.CanRead)
-                {
-                    GetDataFromRemote(remoteStream, localStream);
-                }
-                else
-                {
-                    Console.WriteLine("Remote stream can not read.");
-                }
+                _lock = false;
             }
             catch (ArgumentNullException e)
             {
@@ -101,6 +105,9 @@ namespace PlusSslCom
 
         private void GetDataFromRemote(NetworkStream remoteStream, Stream localStream)
         {
+            if (_lock || !remoteStream.DataAvailable)
+                return;
+
             var buffer = new byte[BufferSize];
 
             do

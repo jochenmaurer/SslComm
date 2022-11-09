@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -164,7 +165,7 @@ namespace PlusSslCom
                     Console.WriteLine("Sent: {0}", message);
 
                     // Buffer to store the response bytes.
-                    data = new byte[Program.BufferSize];
+                    data = new byte[16];
 
                     // String to store the response UTF8 representation.
                     var responseData = string.Empty;
@@ -173,8 +174,8 @@ namespace PlusSslCom
                     if (stream.CanRead)
                     {
                         
-                        var bytes = stream.Read(data, 0, data.Length);
-                        responseData = Encoding.GetEncoding(encoding).GetString(data, 0, bytes);
+                        //var bytes = stream.Read(data, 0, data.Length);
+                        responseData = ReadMessage(stream); //Encoding.GetEncoding(encoding).GetString(data, 0, bytes);
                     }
                     
                     Console.WriteLine("Received: {0}", responseData);
@@ -191,6 +192,27 @@ namespace PlusSslCom
             }
 
             return null;
+        }
+
+        public static string ReadMessage(NetworkStream networkStream)
+        {
+            var buffer = new byte[16];
+            var messageData = new StringBuilder();
+            var bytes = -1;
+            do
+            {
+                bytes = networkStream.Read(buffer, 0, buffer.Length);
+
+                var decoder = Encoding.GetEncoding(Program.CurrentEncoding).GetDecoder();
+                var chars = new char[decoder.GetCharCount(buffer, 0, bytes)];
+                decoder.GetChars(buffer, 0, bytes, chars, 0);
+                messageData.Append(chars);
+                // Check for EOF.
+                if (buffer.Any(t => t == 0))
+                    break;
+            } while (bytes != 0);
+
+            return messageData.ToString();
         }
     }
 }

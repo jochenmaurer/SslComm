@@ -49,7 +49,7 @@ namespace PlusSslCom
                         client.Close();
                     }
 
-                    //Thread.Sleep(100);
+                    Thread.Sleep(100);
                 }
             }
             catch (SocketException e)
@@ -65,34 +65,6 @@ namespace PlusSslCom
             Console.Read();
         }
 
-        private static SslStream GetSecuredStream(TcpClient client, string authName)
-        {
-            var sslStream = new SslStream(
-                client.GetStream(),
-                false,
-                new RemoteCertificateValidationCallback(ValidateServerCertificate),
-                null
-            );
-            // The server name must match the name on the server certificate.
-            try
-            {
-                sslStream.AuthenticateAsClient(authName);
-            }
-            catch (AuthenticationException e)
-            {
-                Console.WriteLine("Exception: {0}", e.Message);
-                if (e.InnerException != null)
-                {
-                    Console.WriteLine("Inner exception: {0}", e.InnerException.Message);
-                }
-
-                Console.WriteLine("Authentication failed - closing the connection.");
-                return null;
-            }
-
-            return sslStream;
-        }
-
         public void SendMessageAndReceiveReplies(Stream localStream, byte[] buffer, int bytesToWrite)
         {
             try
@@ -100,7 +72,7 @@ namespace PlusSslCom
                 //Schreiben nach remote
                 Console.WriteLine("Received from local: {0}", bytesToWrite);
                 if (RemoteStream == null)
-                    RemoteStream = GetSecuredStream(Remote, "");
+                    RemoteStream = SslHelpers.GetSecuredStream(Remote, "");
 
                 RemoteStream.Write(buffer);
                 RemoteStream.Flush();
@@ -129,15 +101,6 @@ namespace PlusSslCom
             {
                 Console.WriteLine("SocketException: {0}", e);
             }
-        }
-
-        public static bool ValidateServerCertificate(
-            object sender,
-            X509Certificate certificate,
-            X509Chain chain,
-            SslPolicyErrors sslPolicyErrors)
-        {
-            return true;
         }
     }
 }
