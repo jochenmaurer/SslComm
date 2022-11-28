@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>PlusSslCom</RootNamespace>
     <AssemblyName>PlusSslCom</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
@@ -51,24 +51,29 @@
     <Compile Include="Other.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Proxy.cs" />
-    <Compile Include="ProxyBase.cs" />
+    <Compile Include="Old\Proxy.cs" />
+    <Compile Include="Old\ProxyBase.cs" />
+    <Compile Include="Old\SimpleSslCycleOld.cs" />
+    <Compile Include="Old\SimpleSslTransaction.cs" />
+    <Compile Include="Old\SimpleTcpAsyncTransaction.cs" />
     <Compile Include="SimpleSslCycle.cs" />
-    <Compile Include="SimpleSslTransaction.cs" />
-    <Compile Include="SimpleTcpAsyncTransaction.cs" />
     <Compile Include="SimpleTcpCycle.cs" />
-    <Compile Include="SimpleTcpTransaction.cs" />
-    <Compile Include="SshTunnel.cs" />
+    <Compile Include="Old\SimpleTcpTransaction.cs" />
+    <Compile Include="Old\SshTunnel2.cs" />
+    <Compile Include="Old\SshTunnel.cs" />
     <Compile Include="SslHelpers.cs" />
-    <Compile Include="SslProxy.cs" />
-    <Compile Include="SslTcpClient.cs" />
-    <Compile Include="SslTcpServer.cs" />
-    <Compile Include="TcpProxy.cs" />
-    <Compile Include="TcpServer.cs" />
+    <Compile Include="Old\SslProxy.cs" />
+    <Compile Include="Old\SslSendAndReceive.cs" />
+    <Compile Include="Old\SslTcpClient.cs" />
+    <Compile Include="Old\SslTcpServer.cs" />
+    <Compile Include="SslThread.cs" />
+    <Compile Include="Old\TcpProxy.cs" />
+    <Compile Include="Old\TcpServer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

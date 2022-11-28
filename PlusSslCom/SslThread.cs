@@ -1,35 +1,34 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
-using System.Timers;
+using System.Threading;
 
 namespace PlusSslCom
 {
-    public class SimpleSslCycle
+    public class SslThread
     {
-        public int BufferSize { get; set; } = Program.BufferSize;
+        public int BufferSize { get; set; } = Program.SmallBufferSize;
         public TcpClient Remote { get; set; }
-        private Timer _timer;
         private NetworkStream _localStream;
-        private bool _lock;
-        private PlusSslStream _sslStream;
-
-        public SimpleSslCycle()
-        {
-            _timer = new Timer(100);
-            _timer.Elapsed += TimerOnElapsed;
-        }
-
-        private void TimerOnElapsed(object sender, ElapsedEventArgs e)
-        {
-            GetDataFromRemote(_localStream);
-        }
+        private SslStream _sslStream;
+        private bool _started;
+        private bool _doLogging;
 
         public void Start(Mapping mapping)
         {
+            _started = true;
+
+            var getDataThread = new Thread(GetDataFromRemote);
+            getDataThread.Start();
+
             StartListener(mapping);
+        }
+
+        public void Stop()
+        {
+            _started = false;
         }
 
         private void StartListener(Mapping mapping)
@@ -44,7 +43,7 @@ namespace PlusSslCom
 
                 var bytes = new byte[BufferSize];
 
-                while (true)
+                while (_started)
                 {
                     Console.Write("Waiting for a connection on address {0}:{1}... ", mapping.FromAddress,
                         mapping.FromPort);
@@ -57,9 +56,6 @@ namespace PlusSslCom
 
                         int bytesToWrite;
 
-                        if (!_timer.Enabled)
-                            _timer.Start();
-
                         //Lese Eingangsmessage
                         while ((bytesToWrite = _localStream.Read(bytes, 0, bytes.Length)) != 0)
                         {
@@ -68,8 +64,6 @@ namespace PlusSslCom
 
                         client.Close();
                     }
-
-                    //Thread.Sleep(100);
                 }
             }
             catch (SocketException e)
@@ -91,8 +85,8 @@ namespace PlusSslCom
             try
             {
                 //Schreiben nach remote
-                _lock = true;
-                Console.WriteLine("Received from local: {0}", bytesToWrite);
+                if (_doLogging)
+                    Console.WriteLine("Received from local: {0}", bytesToWrite);
                 if (_sslStream == null)
                 {
                     _sslStream = SslHelpers.GetSecuredPlusSslStream(Remote, "");
@@ -101,8 +95,8 @@ namespace PlusSslCom
                 _sslStream.Flush();
 
                 //_sslStream.Flush();
-                Console.WriteLine("Sent to remote: {0}", bytesToWrite);
-                _lock = false;
+                if (_doLogging)
+                    Console.WriteLine("Sent to remote: {0}", bytesToWrite);
             }
             catch (ArgumentNullException e)
             {
@@ -116,21 +110,25 @@ namespace PlusSslCom
             return null;
         }
 
-        private void GetDataFromRemote(Stream localStream)
+        private void GetDataFromRemote()
         {
-            if (_lock || _sslStream == null || !_sslStream.NetworkStream.DataAvailable)
-                return;
-
             var buffer = new byte[BufferSize];
 
-            do
+            while (_started)
             {
-                var bytesTransferred = _sslStream.Read(buffer, 0, buffer.Length);
-                Console.WriteLine("Received from remote: {0}", bytesTransferred);
-                localStream.Write(buffer, 0, bytesTransferred);
-                localStream.Flush();
-                Console.WriteLine("Sent to local: {0}", bytesTransferred);
-            } while (_sslStream.NetworkStream.DataAvailable);
+                if (_sslStream != null)
+                {
+                    var bytesTransferred = _sslStream.Read(buffer, 0, buffer.Length);
+                    if (_doLogging)
+                        Console.WriteLine("Received from remote: {0}", bytesTransferred);
+                    _localStream.Write(buffer, 0, bytesTransferred);
+                    _localStream.Flush();
+                    if (_doLogging)
+                        Console.WriteLine("Sent to local: {0}", bytesTransferred);
+                }
+
+                Thread.Sleep(100);
+            }
         }
     }
 }
