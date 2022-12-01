@@ -51,9 +51,10 @@ namespace PlusSslCom
 
                             //send the data to the server
                             if (mapping.UseSsl)
-                                data = SendSslMessageToServer(mapping.ToAddress, mapping.ToPort, data, mapping.Encoding, true);
+                                data = SendSslMessageToServer(mapping.ToAddress, mapping.ToPort, data, mapping.Encoding,
+                                    true);
                             else
-                                data = SendNormalMessageToServer(mapping.ToAddress, mapping.ToPort, data, mapping.Encoding);
+                                data = "";//SendNormalMessageToServer(mapping.ToAddress, mapping.ToPort, data, mapping.Encoding, 1);
 
                             var msg = Encoding.GetEncoding(mapping.Encoding).GetBytes(data);
 
@@ -147,7 +148,7 @@ namespace PlusSslCom
             return null;
         }
 
-        public static string SendNormalMessageToServer(string server, int port, string message, string encoding)
+        public static void SendNormalMessageToServer(string server, int port, string message, string encoding, int count)
         {
             try
             {
@@ -159,27 +160,29 @@ namespace PlusSslCom
                     // Get a client stream for reading and writing.
                     var stream = client.GetStream();
 
-                    // Send the message to the connected TcpServer.
-                    stream.Write(data, 0, data.Length);
-
-                    Console.WriteLine("Sent: {0}", message);
-
-                    // Buffer to store the response bytes.
-                    data = new byte[16];
-
-                    // String to store the response UTF8 representation.
-                    var responseData = string.Empty;
-
-                    // Read the first batch of the TcpServer response bytes.
-                    if (stream.CanRead)
+                    for (var i = 0; i < count; i++)
                     {
-                        
-                        //var bytes = stream.Read(data, 0, data.Length);
-                        responseData = ReadMessage(stream); //Encoding.GetEncoding(encoding).GetString(data, 0, bytes);
+                        // Send the message to the connected TcpServer.
+                        stream.Write(data, 0, data.Length);
+
+                        Console.WriteLine("Sent: {0}", message);
+
+                        // Buffer to store the response bytes.
+                        data = new byte[16];
+
+                        // String to store the response UTF8 representation.
+                        var responseData = string.Empty;
+
+                        // Read the first batch of the TcpServer response bytes.
+                        if (stream.CanRead)
+                        {
+
+                            //var bytes = stream.Read(data, 0, data.Length);
+                            responseData = ReadMessage(stream); //Encoding.GetEncoding(encoding).GetString(data, 0, bytes);
+                        }
+
+                        Console.WriteLine("Received: {0}", responseData);
                     }
-                    
-                    Console.WriteLine("Received: {0}", responseData);
-                    return responseData;
                 }
             }
             catch (ArgumentNullException e)
@@ -190,8 +193,6 @@ namespace PlusSslCom
             {
                 Console.WriteLine("SocketException: {0}", e);
             }
-
-            return null;
         }
 
         public static string ReadMessage(NetworkStream networkStream)

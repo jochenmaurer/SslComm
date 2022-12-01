@@ -59,7 +59,7 @@ namespace PlusSslCom
                         //Lese Eingangsmessage
                         while ((bytesToWrite = _localStream.Read(bytes, 0, bytes.Length)) != 0)
                         {
-                            SendMessageToRemote(_localStream, bytes, bytesToWrite);
+                            SendMessageToRemote(bytes, bytesToWrite);
                         }
 
                         client.Close();
@@ -80,7 +80,7 @@ namespace PlusSslCom
             }
         }
 
-        public string SendMessageToRemote(Stream localStream, byte[] buffer, int bytesToWrite)
+        public void SendMessageToRemote(byte[] buffer, int bytesToWrite)
         {
             try
             {
@@ -106,8 +106,6 @@ namespace PlusSslCom
             {
                 Console.WriteLine("SocketException: {0}", e);
             }
-
-            return null;
         }
 
         private void GetDataFromRemote()

@@ -17,12 +17,12 @@ namespace PlusSslCom
                 false,
                 new RemoteCertificateValidationCallback(ValidateServerCertificate),
                 null
-            );
-            // The server name must match the name on the server certificate.
+            );// The server name must match the name on the server certificate.
             try
             {
-                sslStream.AuthenticateAsClient(authName);
-                sslStream.ReadTimeout = 50;
+                //sslStream.ReadTimeout = 50;
+
+                sslStream.AuthenticateAsClient("TEST Server");
             }
             catch (AuthenticationException e)
             {

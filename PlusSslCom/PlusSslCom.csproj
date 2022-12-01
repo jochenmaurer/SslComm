@@ -34,9 +34,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Renci.SshNet, Version=2020.0.2.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
-      <HintPath>..\packages\SSH.NET.2020.0.2\lib\net40\Renci.SshNet.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -48,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Mapping.cs" />
+    <Compile Include="MultiSslThreads.cs" />
     <Compile Include="Other.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -59,20 +57,18 @@
     <Compile Include="SimpleSslCycle.cs" />
     <Compile Include="SimpleTcpCycle.cs" />
     <Compile Include="Old\SimpleTcpTransaction.cs" />
-    <Compile Include="Old\SshTunnel2.cs" />
-    <Compile Include="Old\SshTunnel.cs" />
     <Compile Include="SslHelpers.cs" />
     <Compile Include="Old\SslProxy.cs" />
     <Compile Include="Old\SslSendAndReceive.cs" />
     <Compile Include="Old\SslTcpClient.cs" />
     <Compile Include="Old\SslTcpServer.cs" />
+    <Compile Include="SslRemoteListener.cs" />
     <Compile Include="SslThread.cs" />
     <Compile Include="Old\TcpProxy.cs" />
     <Compile Include="Old\TcpServer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

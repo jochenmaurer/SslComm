@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Renci.SshNet;
 
 namespace PlusSslCom
 {
@@ -12,15 +8,20 @@ namespace PlusSslCom
     {
         public static int BufferSize = 32767;
         public static int SmallBufferSize = 2048;
+        public static int MediumBufferSize = 2048 * 4;
         private static string certificate = @"C:\temp\certificate.crt";
 
         public static string CurrentEncoding { get; set; } = "Windows-1252";
 
         public static string FirstRequest =
             "CD01000256      060                               RD#TEST                           1  Default-PC                                T    [#  0500            M1                                                                                                    \0";
+        public static string FirstRequestWithAddress =
+            "172.16.20.101:62067;CD01000256      060                               RD#TEST                           1  Default-PC                                T    [#  0500            M1                                                                                                    \0";
         public static string firstRequestWith =
             "CD01000256      060                               RD#TEST                           1  Default-PC                                T    [#  0500            M1                                                                                                    ";
-
+        public static string s00S40RDRequest =
+            "CD01                                              RDS00S24                        RD1  Default-PC                    USE001IN    T      J 0500                                                                                                                  \0";
+    
         public static List<Mapping> Mappings { get; set; } = new List<Mapping>();
         
         public static void Main(string[] args)
@@ -44,26 +45,15 @@ namespace PlusSslCom
                     SslTcpServer.RunServer(62067, certificate);
                 if (args[0].ToLower() == "client")
                 {
-                    var rounds = new Dictionary<int, long>();
-                    var start = DateTime.Now.Ticks;
-                    for (var i = 0; i < 5; i++)
-                    {
-                        var innerStart = DateTime.Now.Ticks;
-                        Proxy.SendNormalMessageToServer("127.0.0.1", 3023, FirstRequest, CurrentEncoding);
-                        rounds.Add(i, DateTime.Now.Ticks - innerStart);
-                    }
-
-                    var end = DateTime.Now.Ticks;
-
-                    foreach (var round in rounds)
-                    {
-                        Console.WriteLine("Round {0}: duration {1}", round.Key, round.Value);
-                    }
-
-                    Console.WriteLine("Total duration {0}", end - start);
-
-                    Console.WriteLine("\nHit enter to continue...");
-                    Console.Read();
+                 Client("127.0.0.1", 3023, FirstRequest);  
+                }
+                if (args[0].ToLower() == "clienta")
+                {
+                 Client("127.0.0.1", 3023, FirstRequestWithAddress);  
+                }
+                if (args[0].ToLower() == "tandem")
+                {
+                 Client("172.16.20.101", 2067, FirstRequest);  
                 }
 
                 
@@ -79,13 +69,43 @@ namespace PlusSslCom
                     var stt = new SimpleSslCycle();
                     stt.Start(Mappings.First(t => t.Name == "distrisslproxy"));
                 }
-                //Ssl proxy with cyclic remote read
+                //Ssl proxy with thread to receive remote messages
                 if (args[0].ToLower() == "sslthread")
                 {
                     var stt = new SslThread();
                     stt.Start(Mappings.First(t => t.Name == "distrisslproxy"));
                 }
+                //Ssl proxy with thread to receive remote messages. Can use multiple remotes
+                if (args[0].ToLower() == "multisslthread")
+                {
+                    var stt = new MultiSslThreads();
+                    stt.Start(Mappings.First(t => t.Name == "distrisslproxy"));
+                }
             }
+        }
+
+        private static void Client(string ip, int port, string request)
+        {
+            var rounds = new Dictionary<int, long>();
+            var start = DateTime.Now.Ticks;
+            for (var i = 0; i < 5; i++)
+            {
+                var innerStart = DateTime.Now.Ticks;
+                Proxy.SendNormalMessageToServer(ip, port, request, CurrentEncoding, 5);
+                rounds.Add(i, DateTime.Now.Ticks - innerStart);
+            }
+
+            var end = DateTime.Now.Ticks;
+
+            foreach (var round in rounds)
+            {
+                Console.WriteLine("Round {0}: duration {1}", round.Key, round.Value);
+            }
+
+            Console.WriteLine("Total duration {0}", end - start);
+
+            Console.WriteLine("\nHit enter to continue...");
+            Console.Read();
         }
     }
 }
