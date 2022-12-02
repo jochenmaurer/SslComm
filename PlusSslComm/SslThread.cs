@@ -1,11 +1,10 @@
 ﻿using System;
-using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace PlusSslCom
+namespace PlusSslComm
 {
     public class SslThread
     {

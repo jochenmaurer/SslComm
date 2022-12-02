@@ -2,7 +2,7 @@
 using System.Net.Security;
 using System.Net.Sockets;
 
-namespace PlusSslCom
+namespace PlusSslComm
 {
     public class Mapping
     {

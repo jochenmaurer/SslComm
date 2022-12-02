@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace PlusSslCom
+namespace PlusSslComm.Old
 {
     public class TcpProxy : ProxyBase
     {

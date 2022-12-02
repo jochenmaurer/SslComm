@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using PlusSslComm.Old;
 
-namespace PlusSslCom
+namespace PlusSslComm
 {
     public class Program
     {
@@ -16,7 +18,7 @@ namespace PlusSslCom
         public static string FirstRequest =
             "CD01000256      060                               RD#TEST                           1  Default-PC                                T    [#  0500            M1                                                                                                    \0";
         public static string FirstRequestWithAddress =
-            "172.16.20.101:62067;CD01000256      060                               RD#TEST                           1  Default-PC                                T    [#  0500            M1                                                                                                    \0";
+            "DACOS4_MAIN_1;CD01000256      060                               RD#TEST                           1  Default-PC                                T    [#  0500            M1                                                                                                    \0";
         public static string firstRequestWith =
             "CD01000256      060                               RD#TEST                           1  Default-PC                                T    [#  0500            M1                                                                                                    ";
         public static string s00S40RDRequest =
@@ -26,6 +28,7 @@ namespace PlusSslCom
         
         public static void Main(string[] args)
         {
+            //TestMatch();
             //var with = Encoding.GetEncoding(CurrentEncoding).GetBytes(FirstRequest);
             //var without = Encoding.GetEncoding(CurrentEncoding).GetBytes(firstRequestWith);
 
@@ -79,9 +82,21 @@ namespace PlusSslCom
                 if (args[0].ToLower() == "multisslthread")
                 {
                     var stt = new MultiSslThreads();
-                    stt.Start(Mappings.First(t => t.Name == "distrisslproxy"));
+                    var mapping = Mappings.First(t => t.Name == "distrisslproxy");
+                    stt.Start(mapping.FromAddress, mapping.FromPort);
                 }
             }
+        }
+
+        private static void TestMatch()
+        {
+            var telConnection = "DACOS4_MAIN_1";
+            var regex = new Regex("(_[0-9]*$)");
+            var match = regex.Match(telConnection);
+            if (match.Success && match.Groups.Count > 0)
+                telConnection = telConnection.Remove(telConnection.Length - match.Value.Length, match.Value.Length);
+
+            Console.WriteLine(telConnection);
         }
 
         private static void Client(string ip, int port, string request)

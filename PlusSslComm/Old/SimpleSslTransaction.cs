@@ -1,30 +1,17 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
-using System.Timers;
+using System.Threading;
 
-namespace PlusSslCom
+namespace PlusSslComm.Old
 {
-    public class SimpleTcpCycle
+    public class SimpleSslTransaction
     {
         public int BufferSize { get; set; } = Program.BufferSize;
         public TcpClient Remote { get; set; }
-        private Timer _timer;
-        private NetworkStream _localStream;
-        private bool _lock;
-
-        public SimpleTcpCycle()
-        {
-            _timer = new Timer(100);
-            _timer.Elapsed += TimerOnElapsed;
-        }
-
-        private void TimerOnElapsed(object sender, ElapsedEventArgs e)
-        {
-            GetDataFromRemote(Remote.GetStream(), _localStream);
-        }
+        public SslStream RemoteStream { get; set; }
 
         public void Start(Mapping mapping)
         {
@@ -46,23 +33,20 @@ namespace PlusSslCom
                     {
                         Console.WriteLine("Connected!");
 
-                        _localStream = client.GetStream();
+                        var stream = client.GetStream();
 
                         int bytesToWrite;
 
-                        if (!_timer.Enabled)
-                            _timer.Start();
-
                         //Lese Eingangsmessage
-                        while ((bytesToWrite = _localStream.Read(bytes, 0, bytes.Length)) != 0)
+                        while ((bytesToWrite = stream.Read(bytes, 0, bytes.Length)) != 0)
                         {
-                            SendMessageToRemote(_localStream, bytes, bytesToWrite);
+                            SendMessageAndReceiveReplies(stream, bytes, bytesToWrite);
                         }
 
                         client.Close();
                     }
 
-                    //Thread.Sleep(100);
+                    Thread.Sleep(100);
                 }
             }
             catch (SocketException e)
@@ -78,18 +62,33 @@ namespace PlusSslCom
             Console.Read();
         }
 
-        public string SendMessageToRemote(Stream localStream, byte[] buffer, int bytesToWrite)
+        public void SendMessageAndReceiveReplies(Stream localStream, byte[] buffer, int bytesToWrite)
         {
             try
             {
                 //Schreiben nach remote
-                _lock = true;
                 Console.WriteLine("Received from local: {0}", bytesToWrite);
-                var remoteStream = Remote.GetStream();
-                remoteStream.Write(buffer, 0, bytesToWrite);
-                remoteStream.Flush();
+                if (RemoteStream == null)
+                    RemoteStream = SslHelpers.GetSecuredStream(Remote, "");
+
+                RemoteStream.Write(buffer);
+                RemoteStream.Flush();
                 Console.WriteLine("Sent to remote: {0}", bytesToWrite);
-                _lock = false;
+
+
+                //Lesen und zurück
+                buffer = new byte[BufferSize];
+                if (RemoteStream.CanRead)
+                {
+                    int bytesTransferred;
+                    do
+                    {
+                        bytesTransferred = RemoteStream.Read(buffer, 0, buffer.Length);
+                        Console.WriteLine("Received from remote: {0}", bytesTransferred);
+                        localStream.Write(buffer, 0, bytesTransferred);
+                        Console.WriteLine("Sent to local: {0}", bytesTransferred);
+                    } while (buffer[bytesTransferred - 1].ToString() != "0");
+                }
             }
             catch (ArgumentNullException e)
             {
@@ -99,25 +98,6 @@ namespace PlusSslCom
             {
                 Console.WriteLine("SocketException: {0}", e);
             }
-
-            return null;
-        }
-
-        private void GetDataFromRemote(NetworkStream remoteStream, Stream localStream)
-        {
-            if (_lock || !remoteStream.DataAvailable)
-                return;
-
-            var buffer = new byte[BufferSize];
-
-            do
-            {
-                var bytesTransferred = remoteStream.Read(buffer, 0, buffer.Length);
-                Console.WriteLine("Received from remote: {0}", bytesTransferred);
-                localStream.Write(buffer, 0, bytesTransferred);
-                localStream.Flush();
-                Console.WriteLine("Sent to local: {0}", bytesTransferred);
-            } while (remoteStream.DataAvailable);
         }
     }
 }

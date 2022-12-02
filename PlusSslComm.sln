@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.1972
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlusSslCom", "PlusSslCom\PlusSslCom.csproj", "{BBD9B5FB-1C8A-4FEB-8EB1-4F77E3CA0F28}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlusSslComm", "PlusSslComm\PlusSslComm.csproj", "{BBD9B5FB-1C8A-4FEB-8EB1-4F77E3CA0F28}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

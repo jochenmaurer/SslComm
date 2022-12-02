@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Text;
 
-namespace PlusSslCom
+namespace PlusSslComm.Old
 {
     public static class Proxy
     {

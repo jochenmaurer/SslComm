@@ -6,7 +6,7 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-namespace PlusSslCom
+namespace PlusSslComm.Old
 {
     public static class SslTcpClient
     {

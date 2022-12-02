@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Timers;
+using PlusSslComm.Old;
 
-namespace PlusSslCom
+namespace PlusSslComm
 {
     public class SimpleSslCycle
     {

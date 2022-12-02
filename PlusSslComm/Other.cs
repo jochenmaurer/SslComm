@@ -1,4 +1,4 @@
-﻿namespace PlusSslCom
+﻿namespace PlusSslComm
 {
     class Other
     {
