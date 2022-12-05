@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Security;
@@ -12,26 +13,39 @@ namespace PlusSslComm
 {
     public class MultiSslThreads
     {
-        public int BufferSize { get; set; } = Program.SmallBufferSize;
+        public int InputBufferSize { get; set; } = Program.BufferSize;
+        public int OutputBufferSize { get; set; } = Program.SmallBufferSize;
         //private NetworkStream _localStream;
+        private TcpListener _listener;
         private TcpClient _localClient;
+        private Thread _thrListener;
+        private string _localIp;
+        private int _localPort;
         private bool _started;
         private bool _doLogging;
         private readonly List<LocalToRemote> _openConnections = new List<LocalToRemote>();
         private readonly Dictionary<string, ConnectionParameters> _connectionParametersMap;
+        private const string _relativeCccomGlobal = @"..\Config\CCCommGlobal.cfg";
+        private const string _fallbackCccomGlobal = @"C:\Program Files\PlusClient\Global\Config\CCCommGlobal.cfg";
 
         public MultiSslThreads()
         {
             _doLogging = true;
-            _connectionParametersMap = new ConfigHandling().GetConnectionParametersMap(
-                @"..\Config\CCCommGlobal.cfg");
+            var cccomGlobal = _relativeCccomGlobal;
+            if (!File.Exists(cccomGlobal))
+            {
+                cccomGlobal = _fallbackCccomGlobal;
+            }
+
+            _connectionParametersMap = new ConfigHandling().GetConnectionParametersMap(cccomGlobal);
         }
 
         public void Start(string localIp, int localPort)
         {
             _started = true;
-
-            StartListener(localIp, localPort);
+            _localIp = localIp;
+            _localPort = localPort;
+            StartListener();
         }
 
         public void Stop()
@@ -43,25 +57,48 @@ namespace PlusSslComm
             _started = false;
         }
 
-        private void StartListener(string localIp, int localPort)
+        private void StartListener()
+        {
+            while (true)
+            {
+                try
+                {
+                    _listener = new TcpListener(IPAddress.Parse(_localIp), _localPort);
+                    _listener.Start();
+
+                    _thrListener = new Thread(Listen);
+                    _thrListener.Start();
+                    _thrListener.Join();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Other exception: {0}", e);
+                }
+                finally
+                {
+                    _localClient?.Dispose();
+                    _listener?.Stop();
+                }
+
+                if (!_started)
+                    break;
+            }
+        }
+
+        private void Listen()
         {
             var lastAddress = "";
             var lastPort = 0;
+            var bytes = new byte[InputBufferSize];
 
-            TcpListener server = null;
-            try
+            while (true)
             {
-                server = new TcpListener(IPAddress.Parse(localIp), localPort);
-                server.Start();
-
-                var bytes = new byte[BufferSize];
-
-                while (_started)
+                try
                 {
-                    Console.Write("Waiting for a connection on address {0}:{1}... ", localIp,
-                        localPort);
+                    Console.Write("Waiting for a connection on address {0}:{1}... ", _localIp,
+                    _localPort);
 
-                    _localClient = server.AcceptTcpClient();
+                    _localClient = _listener.AcceptTcpClient();
 
                     Console.WriteLine("Connected!");
 
@@ -76,10 +113,10 @@ namespace PlusSslComm
                         var buffer = bytes;
 
                         var bufferContent = Encoding.ASCII.GetString(bytes);
-                        if (bufferContent.Contains(";"))
+                        if (bufferContent.Contains(";") && bufferContent.StartsWith("{SSL:"))
                         {
                             var bufferParts = bufferContent.Split(';');
-                            if (_connectionParametersMap.TryGetValue(GetBaseConnection(bufferParts[0]),
+                            if (_connectionParametersMap.TryGetValue(GetBaseConnection(GetApplicationSystem(bufferParts[0])),
                                     out var connectionParameters))
                             {
                                 address = connectionParameters.ProtocolParameters["SslRemoteHost"].ToString();
@@ -89,7 +126,7 @@ namespace PlusSslComm
                                 lastPort = port;
                                 encoding = connectionParameters.ConnectionParameter["Encoding"].ToString();
                                 buffer = Encoding.GetEncoding(encoding).GetBytes(bufferParts[1]);
-                                bytesToWrite = buffer.Length;
+                                bytesToWrite = bytesToWrite - bufferParts[0].Length - 1;
 
                                 SendMessageToRemote(address, port, buffer, bytesToWrite);
                             }
@@ -105,20 +142,23 @@ namespace PlusSslComm
                         }
                     }
                 }
+                catch (IOException e)
+                {
+                    Console.WriteLine("IOException: {0}", e);
+                    break;
+                }
             }
-            catch (SocketException e)
-            {
-                Console.WriteLine("SocketException: {0}", e);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Other exception: {0}", e);
-            }
-            finally
-            {
-                _localClient.Dispose();
-                server?.Stop();
-            }
+        }
+
+        private static string GetApplicationSystem(string bufferPart)
+        {
+            var result = bufferPart;
+            var regex = new Regex("(^\\{SSL:)([a-zA-Z0-9_-]*)(\\})");
+            var match = regex.Match(bufferPart);
+            if (match.Success && match.Groups.Count > 0)
+                result = match.Groups[2].Value;
+
+            return result;
         }
 
         private static string GetBaseConnection(string connectionName)
@@ -147,7 +187,7 @@ namespace PlusSslComm
 
                 localToRemote.Listener = new SslRemoteListener()
                 {
-                    BufferSize = BufferSize,
+                    BufferSize = OutputBufferSize,
                     LocalStream = _localClient.GetStream(),
                     RemoteStream = localToRemote.RemoteStream,
                     DoLogging = _doLogging
@@ -171,12 +211,16 @@ namespace PlusSslComm
                 if (_doLogging)
                     Console.WriteLine("Received from local: {0}", bytesToWrite);
                 var sslStream = GetSslStreamFromDictionary(mappingToAddress, mappingToPort);
-                sslStream.Write(buffer, 0, bytesToWrite);
+                var chunks = Split(buffer, bytesToWrite, OutputBufferSize);
+                foreach (var chunk in chunks)
+                {
+                    sslStream.Write(chunk, 0, chunk.Length);
+                }
+
                 sslStream.Flush();
 
-                //_sslStream.Flush();
                 if (_doLogging)
-                    Console.WriteLine("Sent to remote: {0}", bytesToWrite);
+                    Console.WriteLine("Sent {0} chunks to remote: {1}", chunks.Count(), bytesToWrite);
             }
             catch (ArgumentNullException e)
             {
@@ -188,13 +232,24 @@ namespace PlusSslComm
             }
         }
 
-        public class LocalToRemote
+        public static IEnumerable<byte[]> Split(byte[] value, int inputBufferLength, int outputBufferLength)
         {
-            public string FullAddress { get; set; }
-
-            public SslStream RemoteStream { get; set; }
-
-            public SslRemoteListener Listener { get; set; }
+            var countOfArray = inputBufferLength / outputBufferLength;
+            if (inputBufferLength % outputBufferLength > 0)
+                countOfArray++;
+            for (var i = 0; i < countOfArray; i++)
+            {
+                yield return value.Skip(i * outputBufferLength).Take(outputBufferLength).ToArray();
+            }
         }
+    }
+
+    public class LocalToRemote
+    {
+        public string FullAddress { get; set; }
+
+        public SslStream RemoteStream { get; set; }
+
+        public SslRemoteListener Listener { get; set; }
     }
 }

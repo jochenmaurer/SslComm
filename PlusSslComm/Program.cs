@@ -8,7 +8,7 @@ namespace PlusSslComm
 {
     public class Program
     {
-        public static int BufferSize = 32767;
+        public static int BufferSize = 32817;
         public static int SmallBufferSize = 2048;
         public static int MediumBufferSize = 2048 * 4;
         private static string certificate = @"C:\temp\certificate.crt";
@@ -18,14 +18,15 @@ namespace PlusSslComm
         public static string FirstRequest =
             "CD01000256      060                               RD#TEST                           1  Default-PC                                T    [#  0500            M1                                                                                                    \0";
         public static string FirstRequestWithAddress =
-            "DACOS4_MAIN_1;CD01000256      060                               RD#TEST                           1  Default-PC                                T    [#  0500            M1                                                                                                    \0";
+            "{SSL:DACOS4_MAIN_SSL};CD01000256      060                               RD#TEST                           1  Default-PC                                T    [#  0500            M1                                                                                                    \0";
         public static string firstRequestWith =
             "CD01000256      060                               RD#TEST                           1  Default-PC                                T    [#  0500            M1                                                                                                    ";
         public static string s00S40RDRequest =
             "CD01                                              RDS00S24                        RD1  Default-PC                    USE001IN    T      J 0500                                                                                                                  \0";
     
         public static List<Mapping> Mappings { get; set; } = new List<Mapping>();
-        
+
+        [STAThread]
         public static void Main(string[] args)
         {
             //TestMatch();
