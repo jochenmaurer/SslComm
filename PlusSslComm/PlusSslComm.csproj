@@ -40,8 +40,15 @@
     <Reference Include="Dcx.Plus.Architecture">
       <HintPath>..\..\Plus_Client.OneBranch\assemblies\Dcx.Plus.Architecture.dll</HintPath>
     </Reference>
+    <Reference Include="Dcx.Plus.Infrastructure">
+      <HintPath>..\..\Plus_Client.OneBranch\assemblies\Dcx.Plus.Infrastructure.dll</HintPath>
+    </Reference>
     <Reference Include="Dcx.Plus.Infrastructure.Config">
       <HintPath>..\..\Plus_Client.OneBranch\assemblies\Dcx.Plus.Infrastructure.Config.dll</HintPath>
+    </Reference>
+    <Reference Include="Dcx.Plus.Localization.Infrastructure, Version=2020.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Plus_Client.OneBranch\assemblies\Dcx.Plus.Localization.Infrastructure.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -54,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigHandling.cs" />
+    <Compile Include="Dispatcher.cs" />
     <Compile Include="Mapping.cs" />
     <Compile Include="MultiSslThreads.cs" />
     <Compile Include="Other.cs" />
@@ -64,16 +72,17 @@
     <Compile Include="Old\SimpleSslCycleOld.cs" />
     <Compile Include="Old\SimpleSslTransaction.cs" />
     <Compile Include="Old\SimpleTcpAsyncTransaction.cs" />
-    <Compile Include="SimpleSslCycle.cs" />
-    <Compile Include="SimpleTcpCycle.cs" />
+    <Compile Include="Old\SimpleSslCycle.cs" />
+    <Compile Include="Old\SimpleTcpCycle.cs" />
     <Compile Include="Old\SimpleTcpTransaction.cs" />
+    <Compile Include="SingleSslThread.cs" />
     <Compile Include="SslHelpers.cs" />
     <Compile Include="Old\SslProxy.cs" />
     <Compile Include="Old\SslSendAndReceive.cs" />
     <Compile Include="Old\SslTcpClient.cs" />
     <Compile Include="Old\SslTcpServer.cs" />
-    <Compile Include="SslRemoteListener.cs" />
-    <Compile Include="SslThread.cs" />
+    <Compile Include="Old\SslRemoteListener.cs" />
+    <Compile Include="Old\SslThread.cs" />
     <Compile Include="Old\TcpProxy.cs" />
     <Compile Include="Old\TcpServer.cs" />
   </ItemGroup>
